@@ -1,0 +1,86 @@
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ^1.18
+
+      - uses: actions/checkout@v2
+
+      - run: go build -ldflags "-s -w"
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: push-watch-${{ matrix.target }}
+          path: push-watch
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+  create-release:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: true
+      - run: |
+          echo '${{ steps.create-release.outputs.upload_url }}' > release_upload_url.txt
+      - uses: actions/upload-artifact@v1
+        with:
+          name: create-release
+          path: release_upload_url.txt
+
+  upload-release:
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+    needs:
+      - create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: create-release
+      - id: upload-url
+        run: |
+          echo "::set-output name=url::$(cat create-release/release_upload_url.txt)"
+      - uses: actions/download-artifact@v1
+        with:
+          name: push-watch-${{ matrix.target }}
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.upload-url.outputs.url }}
+          asset_path: ./push-watch-${{ matrix.target }}/push-watch
+          asset_name: push-watch-${{ matrix.target }}
+          asset_content_type: application/octet-stream
