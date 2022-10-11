@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	LoginCmdDeviceName string
+	LoginCmdDeviceName     string
+	WatchCmdPriorityFilter string
 )
 
 var RootCmd = &cobra.Command{
@@ -38,6 +39,7 @@ func init() {
 	RootCmd.AddCommand(LoginCmd)
 	RootCmd.AddCommand(WatchCmd)
 	LoginCmd.Flags().StringVarP(&LoginCmdDeviceName, "device-name", "n", "push-watch", "Device name")
+	WatchCmd.Flags().StringVarP(&WatchCmdPriorityFilter, "priority", "p", "-2,-1,0,1,2", "Priority filter")
 }
 
 func main() {

@@ -19,6 +19,23 @@ func execCmd(cmd []string, msg Message) error {
 	env := os.Environ()
 	env = append(env, fmt.Sprintf("PUSHOVER_MESSAGE=%s", msg.Message))
 	env = append(env, fmt.Sprintf("PUSHOVER_TITLE=%s", msg.Title))
+	switch msg.Priority {
+	case -2:
+		env = append(env, "PUSHOVER_PRIORITY=-2")
+		env = append(env, "PUSHOVER_PRIORITY_STR=lowest")
+	case -1:
+		env = append(env, "PUSHOVER_PRIORITY=-1")
+		env = append(env, "PUSHOVER_PRIORITY_STR=low")
+	case 0:
+		env = append(env, "PUSHOVER_PRIORITY=0")
+		env = append(env, "PUSHOVER_PRIORITY_STR=normal")
+	case 1:
+		env = append(env, "PUSHOVER_PRIORITY=1")
+		env = append(env, "PUSHOVER_PRIORITY_STR=high")
+	case 2:
+		env = append(env, "PUSHOVER_PRIORITY=2")
+		env = append(env, "PUSHOVER_PRIORITY_STR=emergency")
+	}
 	c.Env = env
 	return c.Run()
 }

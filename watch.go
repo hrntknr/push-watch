@@ -4,12 +4,29 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 func watch(deviceID string, secret string, cmd []string) error {
+	var priority []int
+	for _, p := range strings.Split(WatchCmdPriorityFilter, ",") {
+		switch p {
+		case "-2":
+			priority = append(priority, -2)
+		case "-1":
+			priority = append(priority, -1)
+		case "0":
+			priority = append(priority, 0)
+		case "1":
+			priority = append(priority, 1)
+		case "2":
+			priority = append(priority, 2)
+		}
+	}
+
 	if _, err := getMessage(deviceID, secret); err != nil {
 		return err
 	}
@@ -19,8 +36,17 @@ func watch(deviceID string, secret string, cmd []string) error {
 	go func() {
 		for {
 			message := <-ch
-			if err := execCmd(cmd, message); err != nil {
-				log.Print(err)
+			find := false
+			for _, p := range priority {
+				if message.Priority == float64(p) {
+					find = true
+					break
+				}
+			}
+			if find {
+				if err := execCmd(cmd, message); err != nil {
+					log.Print(err)
+				}
 			}
 		}
 	}()
