@@ -32,3 +32,48 @@ $ push-watch watch {deviceID} {deviceSecret} -- sh -c 'echo $PUSHOVER_TITLE\\n$P
 | PUSHOVER_PRIORITY_STR | The priority of the message. (lowest/low/normal/high/emergency)                  |
 | PUSHOVER_APP          | The name of the application that sent the message. This may not be unique.       |
 | PUSHOVER_AID          | The unique id of the application that sent the message.                          |
+
+## flags
+
+```
+> $ push-watch watch --help
+Usage:
+  push-watch watch [flags] device-id device-secret [...command]
+
+Flags:
+  -h, --help              help for watch
+  -p, --priority string   Priority filter (default "-2,-1,0,1,2")
+
+> $ push-watch login --help
+Usage:
+  push-watch login [flags] username password
+
+Flags:
+  -n, --device-name string   Device name (default "push-watch")
+  -h, --help                 help for login
+```
+
+| mode  | flag | desc                                                                                                                                      |
+| ----- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| watch | -p   | Specify the priority filter. If not specified, all priority events will be triggered.                                                     |
+| login | -n   | You can specify a name for the device registration. To use the registered name again, you need to remove the device from pushover web ui. |
+
+## attention
+
+It is not possible to do more than one Listen at a time using the same device.
+To listen to multiple processes at the same time, please register multiple devices.
+
+```
+> $ push-watch login -n device1 myuser mypassword
+Success!
+Device ID: device1_id
+Device Secret: device1_secret
+
+> $ push-watch login -n device2 myuser mypassword
+Success!
+Device ID: device2_id
+Device Secret: device2_secret
+
+> $ nohup push-watch watch device1_id device1_secret echo "Trigger1" &
+> $ nohup push-watch watch device12id device2_secret echo "Trigger2" &
+```
