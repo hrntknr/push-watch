@@ -75,5 +75,5 @@ Device ID: device2_id
 Device Secret: device2_secret
 
 > $ nohup push-watch watch device1_id device1_secret echo "Trigger1" &
-> $ nohup push-watch watch device2id device2_secret echo "Trigger2" &
+> $ nohup push-watch watch device2_id device2_secret echo "Trigger2" &
 ```
